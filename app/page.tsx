@@ -87,12 +87,22 @@ export default function Home() {
           }),
         });
         const data = await res.json();
-        emailNote = data?.emailSent
-          ? " Une copie a été envoyée par email."
-          : " (Vous pouvez télécharger le contrat ci-dessous.)";
-      } catch {
-        emailNote =
-          " (L'envoi automatique a échoué, mais vous pouvez télécharger le contrat ci-dessous.)";
+        if (!res.ok) {
+          throw new Error(data?.error || "Erreur du serveur d'envoi");
+        }
+        if (data?.emailSent) {
+          emailNote =
+            " Le PDF a bien été envoyé à contenu@larosiere.net et cm@larosiere.net.";
+        } else if (data?.reason === "email_not_configured") {
+          emailNote =
+            " EMAIL NON ENVOYÉ : les variables SMTP ne sont pas configurées dans Vercel.";
+        } else {
+          emailNote = ` EMAIL NON ENVOYÉ : ${data?.reason || "Office 365 a refusé l'envoi"}.`;
+        }
+      } catch (error) {
+        emailNote = ` EMAIL NON ENVOYÉ : ${
+          error instanceof Error ? error.message : "erreur inconnue"
+        }. Le PDF reste téléchargeable ci-dessous.`;
       }
 
       setStatus("success");
