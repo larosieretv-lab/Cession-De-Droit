@@ -1,9 +1,13 @@
 import { CONTRACT } from "./contract";
 
-// Access key from https://web3forms.com (free). Set at build time via
-// NEXT_PUBLIC_WEB3FORMS_KEY. The recipient is the email tied to this key;
-// additional recipients are added via the `cc` field below.
-const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "";
+// Access key from https://web3forms.com (free). This key is meant to be public
+// (it lives in the client bundle), so it is safe to hardcode as the default.
+// It can still be overridden at build time via NEXT_PUBLIC_WEB3FORMS_KEY.
+// Recipient = the email tied to this key (contenu@larosiere.net); the address
+// in `CC_RECIPIENTS` is added in copy.
+const WEB3FORMS_KEY =
+  process.env.NEXT_PUBLIC_WEB3FORMS_KEY ||
+  "c7bdbbd3-12d0-4f18-b45f-68c08dc9da99";
 
 // Extra recipient(s) in copy, comma-separated.
 const CC_RECIPIENTS = "cm@larosiere.net";
