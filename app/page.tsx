@@ -4,7 +4,16 @@ import { useRef, useState } from "react";
 import SignaturePad, { SignaturePadHandle } from "@/components/SignaturePad";
 import ContractTerms from "@/components/ContractTerms";
 import { generateCessionPdf } from "@/lib/pdf";
-import { sendContractByEmail, isEmailConfigured } from "@/lib/web3forms";
+
+// Browser-safe Uint8Array -> base64 (chunked to avoid call-stack limits).
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -62,19 +71,28 @@ export default function Home() {
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
 
-      // Send by email (Web3Forms) if configured — never blocks the user.
+      // Send the PDF to the server, which emails it to the Office de Tourisme
+      // (the mailbox acts as the permanent backup archive).
       let emailNote = "";
-      if (isEmailConfigured()) {
-        const result = await sendContractByEmail({
-          prenom,
-          nom,
-          adresse,
-          pdf,
-          filename,
+      try {
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prenom,
+            nom,
+            adresse,
+            filename,
+            pdfBase64: bytesToBase64(pdf),
+          }),
         });
-        emailNote = result.sent
+        const data = await res.json();
+        emailNote = data?.emailSent
           ? " Une copie a été envoyée par email."
-          : " (L'envoi par email n'a pas abouti, mais vous pouvez télécharger le contrat ci-dessous.)";
+          : " (Vous pouvez télécharger le contrat ci-dessous.)";
+      } catch {
+        emailNote =
+          " (L'envoi automatique a échoué, mais vous pouvez télécharger le contrat ci-dessous.)";
       }
 
       setStatus("success");
