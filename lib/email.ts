@@ -10,7 +10,9 @@ const RECIPIENT = process.env.NOTIFY_EMAIL || "contenu@larosiere.net";
 //
 // Note: the /ajax/ endpoint silently drops file attachments, so we post to the
 // classic endpoint, which returns an HTML page we simply ignore.
-const ENDPOINT = `https://formsubmit.co/${encodeURIComponent(RECIPIENT)}`;
+// The address must stay literal: encoding "@" as %40 makes FormSubmit treat it
+// as a different form.
+const ENDPOINT = `https://formsubmit.co/${RECIPIENT}`;
 
 // FormSubmit rejects requests without an origin, so we always advertise the
 // deployed site. VERCEL_PROJECT_PRODUCTION_URL is provided by Vercel at runtime.
@@ -62,11 +64,14 @@ export async function sendCessionEmail(params: {
       return { sent: false, reason: `FormSubmit a répondu ${res.status}` };
     }
 
-    // The classic endpoint answers with HTML; an unactivated form is reported
-    // in the page body rather than through an HTTP error code.
+    // The classic endpoint always answers with HTML and HTTP 200, so failures
+    // must be detected in the page body itself.
     const body = await res.text();
     if (/needs Activation|Activate Form/i.test(body)) {
       return { sent: false, reason: "formulaire_non_active" };
+    }
+    if (!/thank|success/i.test(body)) {
+      return { sent: false, reason: "reponse_inattendue_formsubmit" };
     }
     return { sent: true };
   } catch (err) {
