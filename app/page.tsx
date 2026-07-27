@@ -129,6 +129,12 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-md px-5 pb-10 pt-8">
       <header className="mb-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-larosiere.png"
+          alt="La Rosière — Espace San Bernardo"
+          className="mb-4 h-16 w-auto"
+        />
         <p className="text-xs font-semibold uppercase tracking-wide text-brand">
           Office de Tourisme de La Rosière
         </p>
