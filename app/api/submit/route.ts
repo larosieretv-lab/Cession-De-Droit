@@ -33,6 +33,10 @@ export async function POST(req: NextRequest) {
 
     const result = await sendCessionEmail({ prenom, nom, adresse, pdf, filename });
 
+    if (!result.sent) {
+      console.error("Email delivery failed", { reason: result.reason });
+    }
+
     return NextResponse.json({
       ok: true,
       emailSent: result.sent,
