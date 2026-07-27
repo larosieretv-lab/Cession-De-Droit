@@ -7,7 +7,10 @@ const RECIPIENT = process.env.NOTIFY_EMAIL || "contenu@larosiere.net";
 // The very first submission triggers a one-time confirmation email that must
 // be validated by the recipient; afterwards every contract is delivered with
 // the signed PDF attached (10 MB limit per submission).
-const ENDPOINT = `https://formsubmit.co/ajax/${encodeURIComponent(RECIPIENT)}`;
+//
+// Note: the /ajax/ endpoint silently drops file attachments, so we post to the
+// classic endpoint, which returns an HTML page we simply ignore.
+const ENDPOINT = `https://formsubmit.co/${encodeURIComponent(RECIPIENT)}`;
 
 // FormSubmit rejects requests without an origin, so we always advertise the
 // deployed site. VERCEL_PROJECT_PRODUCTION_URL is provided by Vercel at runtime.
@@ -48,19 +51,22 @@ export async function sendCessionEmail(params: {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
-        Accept: "application/json",
         Origin: SITE_ORIGIN,
         Referer: `${SITE_ORIGIN}/`,
       },
       body: form,
+      redirect: "follow",
     });
-    const data: any = await res.json().catch(() => null);
 
-    if (!res.ok || String(data?.success) !== "true") {
-      return {
-        sent: false,
-        reason: data?.message || `FormSubmit a répondu ${res.status}`,
-      };
+    if (!res.ok) {
+      return { sent: false, reason: `FormSubmit a répondu ${res.status}` };
+    }
+
+    // The classic endpoint answers with HTML; an unactivated form is reported
+    // in the page body rather than through an HTTP error code.
+    const body = await res.text();
+    if (/needs Activation|Activate Form/i.test(body)) {
+      return { sent: false, reason: "formulaire_non_active" };
     }
     return { sent: true };
   } catch (err) {
