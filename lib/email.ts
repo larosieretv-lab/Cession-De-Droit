@@ -1,9 +1,8 @@
 import nodemailer from "nodemailer";
 
-// Recipients of the signed contracts. The mailbox itself acts as the backup
-// archive of every cession.
-const TO_RECIPIENTS =
-  process.env.NOTIFY_EMAIL || "contenu@larosiere.net, cm@larosiere.net";
+// Recipient of the signed contracts. The mailbox itself acts as the backup
+// archive of every cession. Comma-separated if several addresses are needed.
+const TO_RECIPIENTS = process.env.NOTIFY_EMAIL || "contenu@larosiere.net";
 
 /**
  * Sends the signed cession PDF by email via SMTP (nodemailer).

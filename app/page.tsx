@@ -91,8 +91,7 @@ export default function Home() {
           throw new Error(data?.error || "Erreur du serveur d'envoi");
         }
         if (data?.emailSent) {
-          emailNote =
-            " Le PDF a bien été envoyé à contenu@larosiere.net et cm@larosiere.net.";
+          emailNote = " Le PDF a bien été envoyé à contenu@larosiere.net.";
         } else if (data?.reason === "email_not_configured") {
           emailNote =
             " EMAIL NON ENVOYÉ : les variables SMTP ne sont pas configurées dans Vercel.";
