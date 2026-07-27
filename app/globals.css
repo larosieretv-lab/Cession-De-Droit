@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Palette: ink on paper. The primary action is near-black, like a pen stroke,
+ * which keeps red and green free for their semantic meaning. The single accent
+ * is a warm ochre borrowed from the resort's south-facing sunlight.
+ */
+:root {
+  --bg: oklch(0.98 0.004 70);
+  --surface: #ffffff;
+  --surface-sunk: oklch(0.965 0.005 70);
+
+  --ink: oklch(0.22 0.015 65);
+  --ink-soft: oklch(0.44 0.012 65);
+  --ink-faint: oklch(0.56 0.01 65);
+
+  --line: oklch(0.9 0.006 65);
+  --line-strong: oklch(0.8 0.008 65);
+
+  --sun: oklch(0.74 0.145 68);
+  --sun-ink: oklch(0.5 0.12 55);
+
+  --danger: oklch(0.52 0.18 27);
+  --danger-bg: oklch(0.96 0.022 27);
+  --success: oklch(0.46 0.1 155);
+  --success-bg: oklch(0.96 0.03 155);
+}
+
 html,
 body {
   height: 100%;
@@ -9,8 +35,13 @@ body {
 
 body {
   -webkit-tap-highlight-color: transparent;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+::selection {
+  background: color-mix(in oklch, var(--sun) 35%, transparent);
+  color: var(--ink);
 }
 
 /* Prevent iOS zoom on input focus (font-size >= 16px). */
@@ -19,8 +50,80 @@ textarea {
   font-size: 16px;
 }
 
+:focus-visible {
+  outline: 2px solid var(--sun-ink);
+  outline-offset: 2px;
+}
+
 @layer components {
   .input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/30;
+    @apply w-full rounded-[10px] border bg-[var(--surface)] px-3.5 py-3 text-[var(--ink)] outline-none transition-colors duration-150;
+    border-color: var(--line-strong);
+  }
+
+  .input::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .input:hover {
+    border-color: var(--ink-faint);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--sun-ink);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--sun) 30%, transparent);
+  }
+
+  .input[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  .input[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--danger) 22%, transparent);
+  }
+
+  /* Primary action: a solid ink block, no border + soft shadow pairing. */
+  .btn-ink {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-[10px] px-5 text-base font-semibold transition-colors duration-150;
+    min-height: 52px;
+    background: var(--ink);
+    color: var(--surface);
+  }
+
+  .btn-ink:hover:not(:disabled) {
+    background: oklch(0.3 0.02 65);
+  }
+
+  .btn-ink:active:not(:disabled) {
+    background: oklch(0.18 0.015 65);
+  }
+
+  .btn-ink:disabled {
+    background: var(--ink-faint);
+    cursor: not-allowed;
+  }
+
+  .btn-quiet {
+    @apply inline-flex w-full items-center justify-center rounded-[10px] border px-5 font-medium transition-colors duration-150;
+    min-height: 48px;
+    border-color: var(--line-strong);
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .btn-quiet:hover {
+    background: var(--surface-sunk);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

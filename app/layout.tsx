@@ -1,5 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
+
+// One workhorse sans for the whole interface, paired on a contrast axis with a
+// reading serif used only for the page title and the contract itself.
+const sans = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const serif = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-serif",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Cession de droit à l'image — Office de Tourisme de La Rosière",
@@ -10,8 +26,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  themeColor: "#0f766e",
+  themeColor: "#faf8f5",
 };
 
 export default function RootLayout({
@@ -20,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
-      <body className="min-h-full antialiased">{children}</body>
+    <html lang="fr" className={`${sans.variable} ${serif.variable}`}>
+      <body className="min-h-full font-sans antialiased">{children}</body>
     </html>
   );
 }

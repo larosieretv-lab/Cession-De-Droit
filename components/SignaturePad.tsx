@@ -13,25 +13,32 @@ export type SignaturePadHandle = {
  * Works with both touch (mobile) and mouse (desktop), and handles
  * high-DPI screens so the exported signature stays crisp.
  */
-const SignaturePad = forwardRef<SignaturePadHandle, { className?: string }>(
-  function SignaturePad({ className }, ref) {
+const SignaturePad = forwardRef<
+  SignaturePadHandle,
+  { className?: string; onChange?: (hasContent: boolean) => void }
+>(function SignaturePad({ className, onChange }, ref) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const drawing = useRef(false);
     const hasContent = useRef(false);
     const last = useRef<{ x: number; y: number } | null>(null);
 
-    useImperativeHandle(ref, () => ({
-      clear: () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        hasContent.current = false;
-      },
-      isEmpty: () => !hasContent.current,
-      toDataURL: () => canvasRef.current?.toDataURL("image/png") ?? "",
-    }));
+    useImperativeHandle(
+      ref,
+      () => ({
+        clear: () => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          hasContent.current = false;
+          onChange?.(false);
+        },
+        isEmpty: () => !hasContent.current,
+        toDataURL: () => canvasRef.current?.toDataURL("image/png") ?? "",
+      }),
+      [onChange]
+    );
 
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -48,7 +55,7 @@ const SignaturePad = forwardRef<SignaturePadHandle, { className?: string }>(
           ctx.lineWidth = 2.4;
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
-          ctx.strokeStyle = "#0f172a";
+          ctx.strokeStyle = "#231f19";
         }
       };
       resize();
@@ -80,7 +87,10 @@ const SignaturePad = forwardRef<SignaturePadHandle, { className?: string }>(
       ctx.lineTo(p.x, p.y);
       ctx.stroke();
       last.current = p;
-      hasContent.current = true;
+      if (!hasContent.current) {
+        hasContent.current = true;
+        onChange?.(true);
+      }
     };
 
     const end = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -93,6 +103,8 @@ const SignaturePad = forwardRef<SignaturePadHandle, { className?: string }>(
         ref={canvasRef}
         className={className}
         style={{ touchAction: "none" }}
+        role="img"
+        aria-label="Zone de signature"
         onPointerDown={start}
         onPointerMove={move}
         onPointerUp={end}
@@ -100,7 +112,6 @@ const SignaturePad = forwardRef<SignaturePadHandle, { className?: string }>(
         onPointerCancel={end}
       />
     );
-  }
-);
+});
 
 export default SignaturePad;

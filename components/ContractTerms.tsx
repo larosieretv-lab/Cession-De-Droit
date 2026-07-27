@@ -20,6 +20,7 @@ export default function ContractTerms({
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [atEnd, setAtEnd] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // Only show the actual clauses (Articles 1 to 4) and the closing
   // "Fait à … le …" line — not the identity preamble.
@@ -33,8 +34,9 @@ export default function ContractTerms({
   const checkEnd = () => {
     const el = scrollRef.current;
     if (!el) return;
-    const reached =
-      el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+    const scrollable = el.scrollHeight - el.clientHeight;
+    setProgress(scrollable <= 0 ? 1 : Math.min(1, el.scrollTop / scrollable));
+    const reached = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
     if (reached && !atEnd) {
       setAtEnd(true);
       onReachEnd();
@@ -46,6 +48,7 @@ export default function ContractTerms({
     const el = scrollRef.current;
     if (el && el.scrollHeight <= el.clientHeight + 8) {
       setAtEnd(true);
+      setProgress(1);
       onReachEnd();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,31 +56,54 @@ export default function ContractTerms({
 
   return (
     <div>
-      <p className="mb-1.5 text-sm font-medium text-slate-700">
-        Contrat à lire attentivement
-      </p>
-      <div
-        ref={scrollRef}
-        onScroll={checkEnd}
-        className="h-56 overflow-y-auto rounded-xl border border-slate-300 bg-white p-4 text-[13px] leading-relaxed text-slate-700"
-      >
-        <p className="mb-2 text-center text-sm font-bold uppercase text-brand">
-          {CONTRACT.title}
-        </p>
-        {paragraphs.map((p, i) => (
-          <div key={i} className="mb-2.5">
-            {p.heading && (
-              <p className="font-semibold text-slate-900">{p.heading}</p>
-            )}
-            <p>{p.text}</p>
+      <div className="overflow-hidden rounded-xl border border-line-strong bg-surface">
+        {/* Reading progress: the gate is real, so show how much is left. */}
+        <div className="h-[3px] w-full bg-sunk" aria-hidden="true">
+          <div
+            className="h-full bg-sun transition-[width] duration-150 ease-out"
+            style={{ width: `${Math.round(progress * 100)}%` }}
+          />
+        </div>
+
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            onScroll={checkEnd}
+            tabIndex={0}
+            role="region"
+            aria-label="Texte du contrat"
+            className="h-[17rem] overflow-y-auto px-4 py-4 text-[13.5px] leading-[1.65] text-ink-soft sm:h-[20rem] sm:px-5"
+          >
+            <p className="mb-3 font-serif text-[15px] text-ink">
+              {CONTRACT.title}
+            </p>
+            {paragraphs.map((p, i) => (
+              <div key={i} className="mb-3">
+                {p.heading && (
+                  <p className="mb-0.5 font-medium text-ink">{p.heading}</p>
+                )}
+                <p className="[text-wrap:pretty]">{p.text}</p>
+              </div>
+            ))}
           </div>
-        ))}
+
+          {!atEnd && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-surface to-transparent"
+            />
+          )}
+        </div>
       </div>
-      {!atEnd && (
-        <p className="mt-1.5 text-xs text-amber-600">
-          Faites défiler le contrat jusqu&apos;en bas pour pouvoir accepter.
-        </p>
-      )}
+
+      <p
+        className={`mt-2 text-[13px] ${atEnd ? "text-success" : "text-ink-soft"}`}
+        aria-live="polite"
+      >
+        {atEnd
+          ? "Vous avez lu le contrat en entier."
+          : "Faites d\u00e9filer jusqu\u2019en bas pour pouvoir accepter."}
+      </p>
     </div>
   );
 }
