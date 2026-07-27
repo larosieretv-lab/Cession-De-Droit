@@ -4,16 +4,7 @@ import { useRef, useState } from "react";
 import SignaturePad, { SignaturePadHandle } from "@/components/SignaturePad";
 import ContractTerms from "@/components/ContractTerms";
 import { generateCessionPdf } from "@/lib/pdf";
-
-// Browser-safe Uint8Array -> base64 (chunked to avoid call-stack limits).
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
+import { sendContractByEmail } from "@/lib/formsubmit";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -71,38 +62,18 @@ export default function Home() {
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
 
-      // Send the PDF to the server, which emails it to the Office de Tourisme
-      // (the mailbox acts as the permanent backup archive).
-      let emailNote = "";
-      try {
-        const res = await fetch("/api/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prenom,
-            nom,
-            adresse,
-            filename,
-            pdfBase64: bytesToBase64(pdf),
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data?.error || "Erreur du serveur d'envoi");
-        }
-        if (data?.emailSent) {
-          emailNote = " Le PDF a bien été envoyé à contenu@larosiere.net.";
-        } else if (data?.reason === "email_not_configured") {
-          emailNote =
-            " EMAIL NON ENVOYÉ : les variables SMTP ne sont pas configurées dans Vercel.";
-        } else {
-          emailNote = ` EMAIL NON ENVOYÉ : ${data?.reason || "Office 365 a refusé l'envoi"}.`;
-        }
-      } catch (error) {
-        emailNote = ` EMAIL NON ENVOYÉ : ${
-          error instanceof Error ? error.message : "erreur inconnue"
-        }. Le PDF reste téléchargeable ci-dessous.`;
-      }
+      // Email the contract straight from the browser: FormSubmit filters out
+      // submissions coming from datacenter IPs, so this cannot run server-side.
+      const result = await sendContractByEmail({
+        prenom,
+        nom,
+        adresse,
+        pdf,
+        filename,
+      });
+      const emailNote = result.sent
+        ? " Le PDF a bien été envoyé à contenu@larosiere.net."
+        : ` EMAIL NON ENVOYÉ : ${result.reason}. Le PDF reste téléchargeable ci-dessous.`;
 
       setStatus("success");
       setMessage(
