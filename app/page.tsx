@@ -80,7 +80,7 @@ export default function Home() {
       });
       const emailNote = result.sent
         ? email.trim()
-          ? ` Le PDF a été envoyé à l'Office de Tourisme et à ${email.trim()}.`
+          ? ` Le PDF a été envoyé à l'Office de Tourisme, et une confirmation part vers ${email.trim()}. Pensez à enregistrer le PDF ci-dessous pour en garder une copie.`
           : " Le PDF a bien été envoyé à l'Office de Tourisme."
         : ` EMAIL NON ENVOYÉ : ${result.reason}. Le PDF reste téléchargeable ci-dessous.`;
 
@@ -201,7 +201,7 @@ export default function Home() {
             placeholder="camille.durand@email.com"
           />
           <p className="mt-1.5 text-xs text-ink-faint">
-            Pour recevoir une copie du contrat signé par email.
+            Pour recevoir une confirmation de votre signature par email.
           </p>
         </Field>
 
