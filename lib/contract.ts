@@ -8,6 +8,12 @@ export const CONTRACT = {
   cessionnaire:
     "l'Office de Tourisme de La Rosière, représenté par Maxime Perigny et Agathe Wolff",
   cessionnaireSignataires: "Maxime Perigny et Agathe Wolff",
+  // Pre-signed images of the cessionnaire representatives, served from /public
+  // and stamped onto every generated contract.
+  cessionnaireSignatures: [
+    { name: "Maxime Perigny", file: "/signature-maxime.png" },
+    { name: "Agathe Wolff", file: "/signature-agathe.png" },
+  ],
   reportageAuteurs: "Maxime Perigny et Agathe Wolff",
   lieu: "La Rosière",
 } as const;

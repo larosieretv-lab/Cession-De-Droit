@@ -21,6 +21,13 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
+// Loads a PNG shipped in /public and embeds it in the document.
+async function embedPublicPng(doc: PDFDocument, path: string) {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`Image introuvable : ${path}`);
+  return doc.embedPng(await res.arrayBuffer());
+}
+
 const A4 = { width: 595.28, height: 841.89 };
 const MARGIN = 56;
 const CONTENT_WIDTH = A4.width - MARGIN * 2;
@@ -108,7 +115,7 @@ export async function generateCessionPdf(data: CessionData): Promise<Uint8Array>
   }
 
   // Signature block
-  ensureSpace(140);
+  ensureSpace(160);
   y -= 10;
 
   const colWidth = CONTENT_WIDTH / 2;
@@ -138,13 +145,34 @@ export async function generateCessionPdf(data: CessionData): Promise<Uint8Array>
     font: bold,
     color: rgb(0.09, 0.11, 0.15),
   });
-  page.drawText(CONTRACT.cessionnaireSignataires, {
-    x: rightX,
-    y: blockTop - 16,
-    size: 10.5,
-    font,
-    color: rgb(0.09, 0.11, 0.15),
-  });
+  // Both representatives sign every contract: name, then their signature.
+  let cessionnaireY = blockTop - 16;
+  for (const signatory of CONTRACT.cessionnaireSignatures) {
+    page.drawText(signatory.name, {
+      x: rightX,
+      y: cessionnaireY,
+      size: 10.5,
+      font,
+      color: rgb(0.09, 0.11, 0.15),
+    });
+    cessionnaireY -= 6;
+
+    try {
+      const png = await embedPublicPng(doc, signatory.file);
+      const scale = Math.min((colWidth - 24) / png.width, 30 / png.height, 1);
+      const h = png.height * scale;
+      page.drawImage(png, {
+        x: rightX,
+        y: cessionnaireY - h,
+        width: png.width * scale,
+        height: h,
+      });
+      cessionnaireY -= h + 14;
+    } catch {
+      // A missing signature image must not break the contract generation.
+      cessionnaireY -= 30;
+    }
+  }
 
   // Embed the cédant signature image under the left column.
   try {

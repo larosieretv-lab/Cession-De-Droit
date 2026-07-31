@@ -35,23 +35,16 @@ export async function sendContractByEmail(params: {
   form.append("Adresse", params.adresse);
   form.append("Date de signature", new Date().toLocaleString("fr-FR"));
 
-  // When the signer gives their address we use every channel FormSubmit offers:
-  //   - "email" is the field it reads to identify the sender,
-  //   - _cc adds them to the notification (carries the PDF, but delivery is
-  //     unreliable in practice),
-  //   - _autoresponse always reaches them, though without any attachment,
-  //     which is why the download button remains the dependable copy.
+  // When the signer gives their address, _cc sends them the very same email,
+  // PDF attachment included, and _replyto makes answering write back to them.
+  // No _autoresponse on purpose: it would be a second, attachment-less email.
+  // Note: Outlook/Hotmail files these in Junk, as FormSubmit sends from its own
+  // domain rather than larosiere.net.
   const email = params.email?.trim();
   if (email) {
     form.append("email", email);
     form.append("_cc", email);
     form.append("_replyto", email);
-    form.append(
-      "_autoresponse",
-      `Bonjour ${params.prenom},\n\nNous confirmons la signature de votre cession de droit à l'image au profit de l'Office de Tourisme de La Rosière, enregistrée le ${new Date().toLocaleDateString(
-        "fr-FR"
-      )}.\n\nPour toute question, écrivez-nous à ${RECIPIENT}.\n\nL'Office de Tourisme de La Rosière`
-    );
   }
 
   form.append(
