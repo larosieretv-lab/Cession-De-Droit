@@ -19,6 +19,7 @@ export async function sendContractByEmail(params: {
   prenom: string;
   nom: string;
   adresse: string;
+  email?: string;
   pdf: Uint8Array;
   filename: string;
 }): Promise<{ sent: boolean; reason?: string }> {
@@ -33,6 +34,16 @@ export async function sendContractByEmail(params: {
   form.append("Nom", params.nom);
   form.append("Adresse", params.adresse);
   form.append("Date de signature", new Date().toLocaleString("fr-FR"));
+
+  // When the signer gives their address, they receive a copy of the contract
+  // and answering the notification replies to them directly.
+  const email = params.email?.trim();
+  if (email) {
+    form.append("Email du signataire", email);
+    form.append("_cc", email);
+    form.append("_replyto", email);
+  }
+
   form.append(
     "attachment",
     new Blob([new Uint8Array(params.pdf)], { type: "application/pdf" }),
